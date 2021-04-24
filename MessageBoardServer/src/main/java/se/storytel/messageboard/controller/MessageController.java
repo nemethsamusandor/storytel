@@ -1,11 +1,13 @@
 package se.storytel.messageboard.controller;
 
+import java.security.Principal;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,7 @@ import se.storytel.messageboard.dto.MessageDTO;
 import se.storytel.messageboard.dto.MessageListWrapper;
 import se.storytel.messageboard.dto.SaveMessageDTO;
 import se.storytel.messageboard.mapper.MessageMapper;
+import se.storytel.messageboard.service.ClientService;
 import se.storytel.messageboard.service.MessageService;
 
 /**
@@ -31,12 +34,14 @@ import se.storytel.messageboard.service.MessageService;
 @RequestMapping(value = "/api/messages", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MessageController
 {
-    MessageService service;
+    private MessageService service;
+    private ClientService clientService;
 
     @Autowired
-    public MessageController (MessageService service)
+    public MessageController(MessageService service, ClientService clientService)
     {
         this.service = service;
+        this.clientService = clientService;
     }
 
     /**
@@ -61,12 +66,12 @@ public class MessageController
      *
      * @return {@link MessageListWrapper} class contains the list of messages
      */
-    @GetMapping("/client/{id}")
-    public ResponseEntity<MessageListWrapper> findClientMessages(@PathVariable long id)
+    @GetMapping("/client")
+    public ResponseEntity<MessageListWrapper> findClientMessages(Principal principal)
     {
         return ResponseEntity.ok(
             new MessageListWrapper(
-                service.findMessagesByClientId(id).stream()
+                service.findMessagesByClientId(getClientId(principal)).stream()
                     .map(MessageMapper::mapEntityToDTO)
                     .collect(Collectors.toList())
             )
@@ -81,8 +86,10 @@ public class MessageController
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public MessageDTO createMessage(@RequestBody SaveMessageDTO message)
+    public MessageDTO createMessage(@RequestBody SaveMessageDTO message, Principal principal)
     {
+        message.setClientId(getClientId(principal));
+
         return service.saveMessage(message);
     }
 
@@ -93,8 +100,10 @@ public class MessageController
      * @return Saved message with status
      */
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MessageDTO> updateMessage(@RequestBody SaveMessageDTO dto)
+    public ResponseEntity<MessageDTO> updateMessage(@RequestBody SaveMessageDTO dto, Principal principal)
     {
+        dto.setClientId(getClientId(principal));
+
         // Check if the message with the id is exists for the client with clientId.
         // If not MessageNotFoundException os thrown
         service.findMessageByIdAndClientId(dto);
@@ -106,15 +115,28 @@ public class MessageController
      * Delete message by id and client id
      *
      * @param id        id of message
-     * @param clientId  id of client
      * @return Empty response with status
      */
-    @DeleteMapping("/{id}/client/{clientId}")
-    public ResponseEntity<Object> deleteMessage(@PathVariable long id, @PathVariable long clientId)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteMessage(@PathVariable long id, Principal principal)
     {
-        service.deleteMessageByIdAndClientId(id, clientId);
+        service.deleteMessageByIdAndClientId(id, getClientId(principal));
 
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Get client id by username
+     *
+     * @param principal Logged in credentials
+     * @return  Client id
+     */
+    public Long getClientId(Principal principal)
+    {
+        Assert.notNull(principal, "Client credentials must not be null");
+        Assert.notNull(principal.getName(), "Client name must not be null");
+
+        return clientService.getClientIdByUsername(principal.getName());
     }
 
 }

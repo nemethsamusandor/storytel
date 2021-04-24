@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.xml.bind.DatatypeConverter;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -44,11 +43,16 @@ class MessageBoardApplicationTests
 {
     private static final String HEALTH_PATH = "/api/health";
     private static final String MESSAGES_BASE_PATH = "/api/messages";
-    private static final String CLIENT_MESSAGES_PATH = MESSAGES_BASE_PATH + "/client/%s";
-    private static final String DELETE_PATH = MESSAGES_BASE_PATH + "/%s/client/%s";
+    private static final String CLIENT_MESSAGES_PATH = MESSAGES_BASE_PATH + "/client";
+    private static final String DELETE_PATH = MESSAGES_BASE_PATH + "/%s";
+
+    private static final String PASSWORD = "password";
+    private static final String CLIENT_1 = "Emily";
+    private static final String CLIENT_2 = "John";
+    private static final String CLIENT_3 = "Sandor";
+    private static final String CLIENT_4 = "Lili";
 
     private static Long id;
-    private static Long clientId = 4L;
 
     @Autowired
     MessageController controller;
@@ -82,12 +86,15 @@ class MessageBoardApplicationTests
     @Test
     void findAllMessages()
     {
-        ResponseEntity<MessageListWrapper> responseEntity = restTemplate.getForEntity(MESSAGES_BASE_PATH,
-            MessageListWrapper.class);
+        HttpEntity<Object> request = new HttpEntity<>(null, getHeaders(CLIENT_1));
+
+        ResponseEntity<MessageListWrapper> responseEntity = restTemplate.exchange(MESSAGES_BASE_PATH, HttpMethod.GET,
+            request, MessageListWrapper.class);
+
+        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
 
         assertNotNull(responseEntity.getBody());
         assertNotNull(responseEntity.getBody().getMessages());
-        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
 
         assertEquals(7, responseEntity.getBody().getMessages().size());
     }
@@ -99,21 +106,26 @@ class MessageBoardApplicationTests
     @Test
     void findClientMessages()
     {
-        // Get Messages of Client with id 2
-        ResponseEntity<MessageListWrapper> responseEntity =
-            restTemplate.getForEntity(String.format(CLIENT_MESSAGES_PATH, 2), MessageListWrapper.class);
+        // Get Messages of Client "John"
+        HttpEntity<Object> request = new HttpEntity<>(null, getHeaders(CLIENT_2));
+
+        ResponseEntity<MessageListWrapper> responseEntity = restTemplate.exchange(CLIENT_MESSAGES_PATH, HttpMethod.GET,
+            request, MessageListWrapper.class);
+
+        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
 
         assertNotNull(responseEntity.getBody());
         assertNotNull(responseEntity.getBody().getMessages());
-        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
 
         assertEquals(1, responseEntity.getBody().getMessages().size());
         MessageDTO responseDto = responseEntity.getBody().getMessages().get(0);
         assertEquals("Test message 3", responseDto.getMessage());
         assertEquals(2, responseDto.getClient().getId());
 
-        // Get Messages of Client with id 3
-        responseEntity = restTemplate.getForEntity(String.format(CLIENT_MESSAGES_PATH, 3), MessageListWrapper.class);
+        // Get Messages of Client "Sandor"
+        request = new HttpEntity<>(null, getHeaders(CLIENT_3));
+
+        responseEntity = restTemplate.exchange(CLIENT_MESSAGES_PATH, HttpMethod.GET, request, MessageListWrapper.class);
 
         assertNotNull(responseEntity.getBody());
         assertNotNull(responseEntity.getBody().getMessages());
@@ -133,9 +145,9 @@ class MessageBoardApplicationTests
 
         SaveMessageDTO messageDTO = new SaveMessageDTO();
         messageDTO.setMessage(newMessageText);
-        messageDTO.setClientId(clientId);
+        messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
 
-        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders());
+        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
 
         ResponseEntity<MessageDTO> responseEntity =
             restTemplate.postForEntity(MESSAGES_BASE_PATH, request, MessageDTO.class);
@@ -149,8 +161,8 @@ class MessageBoardApplicationTests
         id = savedMessage.getId();
 
         assertNotNull(savedMessage.getClient());
-        assertEquals(clientId, savedMessage.getClient().getId());
-        assertEquals("Lili", savedMessage.getClient().getName());
+        assertEquals(messageDTO.getClientId(), savedMessage.getClient().getId());
+        assertEquals(CLIENT_2, savedMessage.getClient().getUsername());
     }
 
     /**
@@ -165,9 +177,9 @@ class MessageBoardApplicationTests
         SaveMessageDTO messageDTO = new SaveMessageDTO();
         messageDTO.setId(id);
         messageDTO.setMessage(modifiedMessageText);
-        messageDTO.setClientId(clientId);
+        messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
 
-        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders());
+        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
 
         ResponseEntity<MessageDTO> responseEntity = restTemplate.exchange(MESSAGES_BASE_PATH, HttpMethod.PUT, request, MessageDTO.class);
 
@@ -178,20 +190,20 @@ class MessageBoardApplicationTests
         assertEquals(modifiedMessageText, savedMessage.getMessage());
 
         assertNotNull(savedMessage.getClient());
-        assertEquals(clientId, savedMessage.getClient().getId());
-        assertEquals("Lili", savedMessage.getClient().getName());
+        assertEquals(messageDTO.getClientId(), savedMessage.getClient().getId());
+        assertEquals(CLIENT_2, savedMessage.getClient().getUsername());
     }
 
     /**
-     * Update a client message
+     * Delete a client message
      */
     @Order(7)
     @Test
     void deleteMessageTest()
     {
-        HttpEntity<String> request = new HttpEntity<>("", getHeaders());
+        HttpEntity<String> request = new HttpEntity<>("", getHeaders(CLIENT_2));
 
-        String path = String.format(DELETE_PATH, id, clientId);
+        String path = String.format(DELETE_PATH, id);
 
         ResponseEntity<Object> responseEntity = restTemplate.exchange(path, HttpMethod.DELETE, request,
             Object.class);
@@ -200,10 +212,15 @@ class MessageBoardApplicationTests
         assertSame(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
     }
 
-    private HttpHeaders getHeaders()
+    private HttpHeaders getHeaders(String username)
     {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        String authorizationHeader = "Basic " +
+            DatatypeConverter.printBase64Binary((username + ":" + PASSWORD).getBytes());
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", authorizationHeader);
 
         return headers;
     }

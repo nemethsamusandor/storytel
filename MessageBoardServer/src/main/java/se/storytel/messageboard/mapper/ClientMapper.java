@@ -24,7 +24,9 @@ public class ClientMapper
         ClientDTO dto = new ClientDTO();
 
         dto.setId(entity.getId());
-        dto.setName(entity.getName());
+        dto.setUsername(entity.getUsername());
+        dto.setPassword(entity.getPassword());
+        dto.setEnabled(entity.isEnabled());
 
         return dto;
     }
@@ -36,7 +38,9 @@ public class ClientMapper
         Client entity = new Client();
 
         entity.setId(dto.getId());
-        entity.setName(dto.getName());
+        entity.setUsername(dto.getUsername());
+        entity.setPassword(dto.getPassword());
+        entity.setEnabled(dto.isEnabled());
 
         return entity;
     }

@@ -7,7 +7,7 @@
     <!-- Application changelog -->
     <include file="changelog-master.xml" relativeToChangelogFile="true"/>
 
-    <changeSet id="cr-4" author="Sandor Nemeth">
+    <changeSet id="cr-test-1" author="Sandor Nemeth">
         <preConditions onFail="MARK_RAN">
             <tableExists tableName="MESSAGE" />
         </preConditions>

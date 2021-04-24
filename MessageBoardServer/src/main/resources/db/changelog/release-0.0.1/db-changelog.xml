@@ -18,26 +18,49 @@
             <column name="ID" type="NUMBER(19,0)" defaultValueComputed="nextval('client_sequence')">
                 <constraints nullable="false" primaryKey="true"/>
             </column>
-            <column name="NAME" type="VARCHAR2(255 CHAR)" >
+            <column name="USERNAME" type="VARCHAR2(50 CHAR)" >
                 <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="PASSWORD" type="VARCHAR2(100 CHAR)" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENABLED" type="TINYINT" defaultValue="1">
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="cr-2" author="Sandor Nemeth">
         <preConditions onFail="MARK_RAN">
-            <tableExists tableName="CLIENT" />
+            <not>
+                <tableExists tableName="AUTHORITIES" />
+            </not>
         </preConditions>
         <comment>
-            Load initial data to CLIENT table from client_data.csv if table is exist
+            Create AUTHORITIES table
         </comment>
+        <createTable tableName="AUTHORITIES">
+            <column name="USERNAME" type="VARCHAR2(50 CHAR)" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="AUTHORITY" type="VARCHAR2(50 CHAR)" >
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
 
-        <loadData tableName="CLIENT" file="db/changelog/data/client_data.csv">
-            <column name="NAME" header="Client name" type="string"/>
-        </loadData>
+        <addForeignKeyConstraint baseTableName="AUTHORITIES" baseColumnNames="USERNAME"
+                                 referencedTableName="CLIENT" referencedColumnNames="USERNAME"
+                                 constraintName="FK_AUTHORITIES_CLIENT" />
     </changeSet>
 
     <changeSet id="cr-3" author="Sandor Nemeth">
+        <createIndex tableName="AUTHORITIES" indexName="idx_auth_client_id" unique="true">
+            <column name="AUTHORITY" />
+            <column name="USERNAME" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="cr-4" author="Sandor Nemeth">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="MESSAGE" />
@@ -56,6 +79,35 @@
             </column>
             <column name="TEXT" type="CLOB" />
         </createTable>
+    </changeSet>
+
+    <!-- Data initialization -->
+    <changeSet id="cr-data-client" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="CLIENT" />
+        </preConditions>
+        <comment>
+            Load initial data to CLIENT table from client_data.csv if table is exist
+        </comment>
+
+        <loadData tableName="CLIENT" file="db/changelog/data/client_data.csv">
+            <column name="USERNAME" header="Username" type="string"/>
+            <column name="PASSWORD" header="Password" type="string"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet id="cr-data-auth" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="AUTHORITIES" />
+        </preConditions>
+        <comment>
+            Load initial data to AUTHORITIES table from authorities_data.csv if table is exist
+        </comment>
+
+        <loadData tableName="AUTHORITIES" file="db/changelog/data/authorities_data.csv">
+            <column name="AUTHORITY" header="Authority" type="string"/>
+            <column name="USERNAME" header="Username" type="string"/>
+        </loadData>
     </changeSet>
 
 </databaseChangeLog>

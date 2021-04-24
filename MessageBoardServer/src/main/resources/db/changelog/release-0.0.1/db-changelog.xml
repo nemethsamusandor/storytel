@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="cr-1" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="CLIENT" />
+            </not>
+        </preConditions>
+        <comment>
+            Create CLIENT table
+        </comment>
+        <createSequence sequenceName="client_sequence" startValue="1"/>
+        <createTable tableName="CLIENT">
+            <column name="ID" type="NUMBER(19,0)" defaultValueComputed="nextval('client_sequence')">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="NAME" type="VARCHAR2(255 CHAR)" >
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="cr-2" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="CLIENT" />
+        </preConditions>
+        <comment>
+            Load initial data to CLIENT table from client_data.csv if table is exist
+        </comment>
+
+        <loadData tableName="CLIENT" file="db/changelog/data/client_data.csv">
+            <column name="NAME" header="Client name" type="string"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet id="cr-3" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="MESSAGE" />
+            </not>
+        </preConditions>
+        <comment>
+            Create MESSAGE table
+        </comment>
+        <createSequence sequenceName="message_sequence" startValue="1"/>
+        <createTable tableName="MESSAGE">
+            <column name="ID" type="NUMBER(19,0)" defaultValueComputed="nextval('message_sequence')">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="CLIENT_ID" type="NUMBER(19,0)"  >
+                <constraints nullable="false"/>
+            </column>
+            <column name="TEXT" type="CLOB" />
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

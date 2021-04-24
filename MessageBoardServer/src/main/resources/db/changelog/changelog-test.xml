@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- Application changelog -->
+    <include file="changelog-master.xml" relativeToChangelogFile="true"/>
+
+    <changeSet id="cr-4" author="Sandor Nemeth">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="MESSAGE" />
+        </preConditions>
+        <comment>
+            Load test data to MESSAGE table from message_test_data.csv if table is exist
+        </comment>
+
+        <loadData tableName="MESSAGE" file="db/changelog/data/message_test_data.csv">
+            <column name="TEXT" header="Message" type="string"/>
+            <column name="CLIENT_ID" header="ClientId" type="numeric"/>
+        </loadData>
+    </changeSet>
+
+</databaseChangeLog>

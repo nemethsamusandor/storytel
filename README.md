@@ -1,4 +1,4 @@
-# Storytel Backend Coding Challenge
+# Message Board Server
 
 ## Project technologies
 * Apache Maven 3.6.0

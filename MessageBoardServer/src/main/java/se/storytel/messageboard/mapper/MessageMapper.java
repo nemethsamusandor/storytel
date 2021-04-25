@@ -3,8 +3,6 @@ package se.storytel.messageboard.mapper;
 import org.springframework.util.Assert;
 
 import se.storytel.messageboard.dto.MessageDTO;
-import se.storytel.messageboard.dto.SaveMessageDTO;
-import se.storytel.messageboard.entity.Client;
 import se.storytel.messageboard.entity.Message;
 
 /**
@@ -27,13 +25,13 @@ public class MessageMapper
      */
     public static MessageDTO mapEntityToDTO(Message entity)
     {
-        Assert.notNull(entity, "Message is null");
-        Assert.notNull(entity.getClient(), "Client is null");
+        Assert.notNull(entity, "Entity must not be null");
+        Assert.notNull(entity.getClient(), "Client id must not be null");
 
         MessageDTO dto = new MessageDTO();
 
         dto.setId(entity.getId());
-        dto.setMessage(entity.getText());
+        dto.setText(entity.getText());
         dto.setClient(ClientMapper.mapEntityToDTO(entity.getClient()));
 
         return dto;
@@ -47,38 +45,15 @@ public class MessageMapper
      */
     public static Message mapDTOToEntity(MessageDTO dto)
     {
-        Assert.notNull(dto, "MessageDTO is null");
-        Assert.notNull(dto.getClient(), "ClientDTO is null");
+        Assert.notNull(dto, "DTO must not be null");
+        Assert.notNull(dto.getClient(), "Client id must not be null");
 
         Message entity = new Message();
 
         entity.setId(dto.getId());
-        entity.setText(dto.getMessage());
+        entity.setText(dto.getText());
         entity.setClient(ClientMapper.mapDTOToEntity(dto.getClient()));
 
         return entity;
     }
-
-    /**
-     * Map {@link SaveMessageDTO} to {@link Message} entity
-     *
-     * @param dto       dto
-     * @param client    client object
-     * @return Mapped entity
-     */
-    public static Message mapSaveDTOToEntity(SaveMessageDTO dto, Client client)
-    {
-        Assert.notNull(dto, "SaveMessageDTO must not be null");
-        Assert.notNull(dto.getClientId(), "ClientId must not be null");
-
-        Message entity = new Message();
-
-        entity.setId(dto.getId());
-        entity.setText(dto.getMessage());
-        entity.setClient(client);
-
-        return entity;
-    }
-
-
 }

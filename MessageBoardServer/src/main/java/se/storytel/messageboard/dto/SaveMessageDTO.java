@@ -4,13 +4,15 @@ import java.io.Serializable;
 
 /**
  * Data transfer object to create a new message
+ *
+ * @author Sandor Nemeth
  */
 public class SaveMessageDTO implements Serializable
 {
     private static final long serialVersionUID = -7868559646424834180L;
 
     private Long id;
-    private String message;
+    private String text;
     private Long clientId;
 
     public Long getId()
@@ -23,14 +25,14 @@ public class SaveMessageDTO implements Serializable
         this.id = id;
     }
 
-    public String getMessage()
+    public String getText()
     {
-        return message;
+        return text;
     }
 
-    public void setMessage(String message)
+    public void setText(String text)
     {
-        this.message = message;
+        this.text = text;
     }
 
     public Long getClientId()

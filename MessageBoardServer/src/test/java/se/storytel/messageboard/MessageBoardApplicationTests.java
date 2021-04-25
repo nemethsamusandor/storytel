@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import dto.HealthCheckTestDTO;
 import se.storytel.messageboard.controller.MessageController;
+import se.storytel.messageboard.dto.ErrorResponseWrapper;
 import se.storytel.messageboard.dto.MessageDTO;
 import se.storytel.messageboard.dto.MessageListWrapper;
 import se.storytel.messageboard.dto.SaveMessageDTO;
@@ -50,7 +51,7 @@ class MessageBoardApplicationTests
     private static final String CLIENT_1 = "Emily";
     private static final String CLIENT_2 = "John";
     private static final String CLIENT_3 = "Sandor";
-    private static final String CLIENT_4 = "Lili";
+    private static final String CLIENT_4 = "Jan";
 
     private static Long id;
 
@@ -119,7 +120,7 @@ class MessageBoardApplicationTests
 
         assertEquals(1, responseEntity.getBody().getMessages().size());
         MessageDTO responseDto = responseEntity.getBody().getMessages().get(0);
-        assertEquals("Test message 3", responseDto.getMessage());
+        assertEquals("Test message 3", responseDto.getText());
         assertEquals(2, responseDto.getClient().getId());
 
         // Get Messages of Client "Sandor"
@@ -144,7 +145,7 @@ class MessageBoardApplicationTests
         String newMessageText = "New message";
 
         SaveMessageDTO messageDTO = new SaveMessageDTO();
-        messageDTO.setMessage(newMessageText);
+        messageDTO.setText(newMessageText);
         messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
 
         HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
@@ -156,7 +157,7 @@ class MessageBoardApplicationTests
         assertNotNull(responseEntity.getBody());
 
         MessageDTO savedMessage = responseEntity.getBody();
-        assertEquals(newMessageText, savedMessage.getMessage());
+        assertEquals(newMessageText, savedMessage.getText());
 
         id = savedMessage.getId();
 
@@ -176,7 +177,7 @@ class MessageBoardApplicationTests
 
         SaveMessageDTO messageDTO = new SaveMessageDTO();
         messageDTO.setId(id);
-        messageDTO.setMessage(modifiedMessageText);
+        messageDTO.setText(modifiedMessageText);
         messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
 
         HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
@@ -187,7 +188,7 @@ class MessageBoardApplicationTests
         assertNotNull(responseEntity.getBody());
 
         MessageDTO savedMessage = responseEntity.getBody();
-        assertEquals(modifiedMessageText, savedMessage.getMessage());
+        assertEquals(modifiedMessageText, savedMessage.getText());
 
         assertNotNull(savedMessage.getClient());
         assertEquals(messageDTO.getClientId(), savedMessage.getClient().getId());
@@ -210,6 +211,123 @@ class MessageBoardApplicationTests
 
         assertNotNull(responseEntity);
         assertSame(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
+    }
+
+    /**
+     * Get All messages not authorized
+     */
+    @Test
+    void findAllMessagesNotAuthorized()
+    {
+        HttpEntity<Object> request = new HttpEntity<>(null, getHeaders(CLIENT_4));
+
+        ResponseEntity<MessageListWrapper> responseEntity = restTemplate.exchange(MESSAGES_BASE_PATH, HttpMethod.GET,
+            request, MessageListWrapper.class);
+
+        assertSame(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
+    }
+
+    /**
+     * Create message with message id
+     */
+    @Test
+    void createMessageWithMessageIdTest()
+    {
+        String newMessageText = "New message";
+
+        SaveMessageDTO messageDTO = new SaveMessageDTO();
+        messageDTO.setId(1L);
+        messageDTO.setText(newMessageText);
+        messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
+
+        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
+
+        ResponseEntity<ErrorResponseWrapper> responseEntity =
+            restTemplate.postForEntity(MESSAGES_BASE_PATH, request, ErrorResponseWrapper.class);
+
+        assertSame(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+
+        ErrorResponseWrapper savedMessage = responseEntity.getBody();
+        assertEquals("Message id must not be set for adding new message", savedMessage.getMessage());
+    }
+
+    /**
+     * Try to delete another client's message
+     */
+    @Order(8)
+    @Test
+    void deleteMessageOfOtherClientTest()
+    {
+        HttpEntity<String> request = new HttpEntity<>("", getHeaders(CLIENT_2));
+
+        String path = String.format(DELETE_PATH, 1);
+
+        ResponseEntity<Object> responseEntity = restTemplate.exchange(path, HttpMethod.DELETE, request,
+            Object.class);
+
+        assertNotNull(responseEntity);
+        assertSame(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    /**
+     * Try to update another client's message
+     */
+    @Order(9)
+    @Test
+    void updateMessageOfOtherClientTest()
+    {
+        String modifiedMessageText = "Modified message";
+
+        SaveMessageDTO messageDTO = new SaveMessageDTO();
+        messageDTO.setId(1L);
+        messageDTO.setText(modifiedMessageText);
+        messageDTO.setClientId(controller.getClientId(() -> CLIENT_2));
+
+        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_2));
+
+        ResponseEntity<MessageDTO> responseEntity = restTemplate.exchange(MESSAGES_BASE_PATH, HttpMethod.PUT, request, MessageDTO.class);
+
+        assertSame(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    /**
+     * Call interface with wrong method type
+     */
+    @Order(10)
+    @Test
+    void methodNotAllowedTest()
+    {
+        String modifiedMessageText = "Modified message";
+
+        SaveMessageDTO messageDTO = new SaveMessageDTO();
+        messageDTO.setId(1L);
+        messageDTO.setText(modifiedMessageText);
+        messageDTO.setClientId(controller.getClientId(() -> CLIENT_1));
+
+        HttpEntity<SaveMessageDTO> request = new HttpEntity<>(messageDTO, getHeaders(CLIENT_1));
+
+        ResponseEntity<MessageDTO> responseEntity = restTemplate.exchange(MESSAGES_BASE_PATH, HttpMethod.DELETE, request, MessageDTO.class);
+
+        assertSame(HttpStatus.METHOD_NOT_ALLOWED, responseEntity.getStatusCode());
+    }
+
+    /**
+     * Id is not provided to delete
+     */
+    @Order(11)
+    @Test
+    void missingIdForDeleteTest()
+    {
+        HttpEntity<String> request = new HttpEntity<>("", getHeaders(CLIENT_2));
+
+        String path = String.format(DELETE_PATH, (Object) null);
+
+        ResponseEntity<Object> responseEntity = restTemplate.exchange(path, HttpMethod.DELETE, request,
+            Object.class);
+
+        assertNotNull(responseEntity);
+        assertSame(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
     private HttpHeaders getHeaders(String username)

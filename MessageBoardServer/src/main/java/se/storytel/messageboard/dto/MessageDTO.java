@@ -12,7 +12,7 @@ public class MessageDTO implements Serializable
     private static final long serialVersionUID = 5615604622048511113L;
 
     private Long id;
-    private String message;
+    private String text;
     private ClientDTO client;
 
     public Long getId()
@@ -25,14 +25,14 @@ public class MessageDTO implements Serializable
         this.id = id;
     }
 
-    public String getMessage()
+    public String getText()
     {
-        return message;
+        return text;
     }
 
-    public void setMessage(String message)
+    public void setText(String text)
     {
-        this.message = message;
+        this.text = text;
     }
 
     public ClientDTO getClient()

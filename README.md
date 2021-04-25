@@ -1,39 +1,84 @@
 # Storytel Backend Coding Challenge
 
-Welcome, as part of your interview process please complete the following technical task. Your
-code will be shared with the team and form the basis of a technical discussion. We conduct these
-tests in preference to live-coding during interviews, finding that we learn a lot more from a
-discussion of code.
-
-## Task
-
-Design and build a RESTful API to serve as the backend for a public message board. It should
-support the following features:
-- A client can create a message in the service
-- A client can modify their own messages
-- A client can delete their own messages
-- A client can view all messages in the service
-
-Use an in-memory solution for storing any data for this service. Consider the appropriate HTTP
-verbs, headers and responses to use.
-
-You should also include tests to assert the correctness of your solution.
-If you wish to show off your fullstack skills, you are welcome to include a UI over the API, but this is
-optional.
-
-The complete solution should include a README that describes how to build and run the solution.
-Please either share the code with us in a public source repository or via email in a zip.
-
-## Technical Details
-
-Please choose between our core languages of Java, C#, F# or Go, and your own choice of
-frameworks/libraries to help implement the web layer and testing.
-
-Ensure the project is easily built with a common build system for the chose ecosystem.
-
-Consider including a Dockerfile if you wish to demonstrate your knowledge of image building
-
+## Project technologies
+* Apache Maven 3.6.0
+* Java 1.8.0_202, vendor: AdoptOpenJdk
+* Docker engine version 20.10.5
+* IntelliJ Idea 2021.1
+* Spring boot 2.4.5
+* Liquibase 3.8.0
+* H2 database 1.4.200
 
 ---
 
+## Clone project from GitHub
+```git clone https://github.com/nemethsamusandor/storytel.git```
 
+## Maven Build
+Run ```mvn clean install``` to build the complete project with tests
+
+or
+
+```mvn clean install -DskipTests``` without tests
+
+```./mvnw``` command also can be used instead of mvn from the project root
+
+## Docker build and run
+* Run Docker build ```docker build -t se.storytel.messageboard:0.0.1 .``` to create docker image
+* Run Docker image ```docker run --publish 8239:8080 --detach --name storytel.messageboard se.storytel.messageboard:0.0.1```
+
+## Database connection
+Database is accessible on localhost:8329/h2-console
+````
+Driver class:   org.h2.Driver
+JDBC URL:       jdbc:h2:mem:storytel
+User Name:      storytel
+Password:       <leave it empty>
+````
+
+## Initialization
+RestAPI endpoint is accessible by default on port 8329.
+Clients need to login in order to access services methods.
+Initiated clients (what can be extended in H2 in memory database):
+
+Username|Password
+--------|---------
+Emily   | password
+John    | password
+Sandor  | password
+Lili    | password
+
+Service uses Basic authentication
+
+###Insert new client to database 
+````
+insert into client (username, password) values ('New client', 'bcrypt encoded password');
+
+insert into authorities (username, authority) values ('New client', 'ROLE_USER');
+````
+
+Encrypted password can be generetad online e.g. on this site: ``https://bcrypt-generator.com/``.
+
+## Available endpoints
+
+* ```GET http://localhost:8329/messages``` - Get all messages in the service 
+* ```GET http://localhost:8329/messages/client``` - Get all messages of the authenticated client
+* ```POST http://localhost:8329/messages``` - Add a client message
+  
+  ``Request body: 
+    {
+    "text": "string"
+    }
+  ``
+* ```PUT http://localhost:8329/messages``` - Update a client message
+
+  ``Request body:
+  {
+  "id" : int,
+  "text": "string"
+  }
+  ``
+* ```DELETE http://localhost:8329/messages/{id}``` - Delete a client message
+
+## Service test
+Service can be tested with e.g. Postman, Terminal (curl) or other tools

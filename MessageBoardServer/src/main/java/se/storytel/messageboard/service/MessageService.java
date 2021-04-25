@@ -63,7 +63,7 @@ public class MessageService
         Client client = clientRepository.findById(dto.getClientId())
             .orElseThrow(ClientNotFoundException::new);
 
-        Message savedEntity = messageRepository.save(MessageMapper.mapSaveDTOToEntity(dto, client));
+        Message savedEntity = messageRepository.save(getMessage(dto.getId(), dto.getText(), client));
 
         return MessageMapper.mapEntityToDTO(savedEntity);
     }
@@ -77,9 +77,19 @@ public class MessageService
         return findMessageByIdAndClientId(dto.getId(), dto.getClientId());
     }
 
-    public Message findMessageByIdAndClientId(Long id, Long clientId)
+    private Message findMessageByIdAndClientId(Long id, Long clientId)
     {
         return messageRepository.findMessageByIdAndClientId(id, clientId)
             .orElseThrow(MessageNotFoundException::new);
+    }
+
+    private Message getMessage(Long id, String text, Client client)
+    {
+        Message message = new Message();
+        message.setId(id);
+        message.setText(text);
+        message.setClient(client);
+
+        return message;
     }
 }

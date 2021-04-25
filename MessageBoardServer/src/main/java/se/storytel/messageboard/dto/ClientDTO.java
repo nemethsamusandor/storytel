@@ -6,6 +6,8 @@ import se.storytel.messageboard.entity.Client;
 
 /**
  * Data transfer object for {@link Client} entity
+ *
+ * @author Sandor Nemeth
  */
 public class ClientDTO implements Serializable
 {

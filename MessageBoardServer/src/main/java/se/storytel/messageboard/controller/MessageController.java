@@ -2,6 +2,7 @@ package se.storytel.messageboard.controller;
 
 import java.security.Principal;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import se.storytel.messageboard.dto.ErrorResponseWrapper;
 import se.storytel.messageboard.dto.MessageDTO;
 import se.storytel.messageboard.dto.MessageListWrapper;
 import se.storytel.messageboard.dto.SaveMessageDTO;
@@ -33,13 +34,13 @@ import se.storytel.messageboard.service.MessageService;
 @RequestMapping(value = "/api/messages", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MessageController
 {
-    private MessageService service;
-    private ClientService clientService;
+    private final MessageService messageService;
+    private final ClientService clientService;
 
     @Autowired
-    public MessageController(MessageService service, ClientService clientService)
+    public MessageController(MessageService messageService, ClientService clientService)
     {
-        this.service = service;
+        this.messageService = messageService;
         this.clientService = clientService;
     }
 
@@ -53,7 +54,7 @@ public class MessageController
     {
         return ResponseEntity.ok(
             new MessageListWrapper(
-                service.findAllMessage().stream()
+                messageService.findAllMessage().stream()
                     .map(MessageMapper::mapEntityToDTO)
                     .collect(Collectors.toList())
             )
@@ -70,7 +71,7 @@ public class MessageController
     {
         return ResponseEntity.ok(
             new MessageListWrapper(
-                service.findMessagesByClientId(getClientId(principal)).stream()
+                messageService.findMessagesByClientId(getClientId(principal)).stream()
                     .map(MessageMapper::mapEntityToDTO)
                     .collect(Collectors.toList())
             )
@@ -84,12 +85,19 @@ public class MessageController
      * @return  Saved message with status
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageDTO createMessage(@RequestBody SaveMessageDTO message, Principal principal)
+    public ResponseEntity<Object> createMessage(@RequestBody SaveMessageDTO message, Principal principal)
     {
+        if (message.getId() != null)
+        {
+            HttpStatus status = HttpStatus.BAD_REQUEST;
+            return new ResponseEntity<>(
+                new ErrorResponseWrapper("Message id must not be set for adding new message",
+                    status.toString()), status);
+        }
+
         message.setClientId(getClientId(principal));
 
-        return service.saveMessage(message);
+        return new ResponseEntity<>(messageService.saveMessage(message), HttpStatus.CREATED);
     }
 
     /**
@@ -105,9 +113,9 @@ public class MessageController
 
         // Check if the message with the id is exists for the client with clientId.
         // If not MessageNotFoundException os thrown
-        service.findMessageByIdAndClientId(dto);
+        messageService.findMessageByIdAndClientId(dto);
 
-        return ResponseEntity.ok(service.saveMessage(dto));
+        return ResponseEntity.ok(messageService.saveMessage(dto));
     }
 
     /**
@@ -119,7 +127,7 @@ public class MessageController
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteMessage(@PathVariable long id, Principal principal)
     {
-        service.deleteMessageByIdAndClientId(id, getClientId(principal));
+        messageService.deleteMessageByIdAndClientId(id, getClientId(principal));
 
         return ResponseEntity.noContent().build();
     }

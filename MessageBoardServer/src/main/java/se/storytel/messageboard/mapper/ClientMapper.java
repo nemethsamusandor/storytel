@@ -19,7 +19,7 @@ public class ClientMapper
 
     public static ClientDTO mapEntityToDTO(Client entity)
     {
-        Assert.notNull(entity, "Client is null");
+        Assert.notNull(entity, "Entity must not be null");
 
         ClientDTO dto = new ClientDTO();
 
@@ -33,7 +33,7 @@ public class ClientMapper
 
     public static Client mapDTOToEntity(ClientDTO dto)
     {
-        Assert.notNull(dto, "ClientDTO is null");
+        Assert.notNull(dto, "DTO must not be null");
 
         Client entity = new Client();
 

@@ -1,5 +1,10 @@
 package se.storytel.messageboard.dto;
 
+/**
+ * Wrap error response for proper message format
+ *
+ * @author Sandor Nemeth
+ */
 public class ErrorResponseWrapper
 {
     private final String message;

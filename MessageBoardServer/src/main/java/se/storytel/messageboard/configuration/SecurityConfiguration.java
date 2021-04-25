@@ -38,6 +38,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter
         httpSecurity.authorizeRequests()
             .mvcMatchers("/api/health").permitAll()
             .mvcMatchers("/h2-console/**").permitAll()
+            .mvcMatchers("/api/login").permitAll()
             .mvcMatchers("/api/messages").hasAnyRole("USER")
             .anyRequest().authenticated()
             .and()
@@ -45,6 +46,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter
             .and()
             .csrf()
             .disable();
+
+        httpSecurity.cors();
 
         httpSecurity.headers()
             .frameOptions()

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ import se.storytel.messageboard.dto.ErrorResponseWrapper;
 import se.storytel.messageboard.dto.MessageDTO;
 import se.storytel.messageboard.dto.MessageListWrapper;
 import se.storytel.messageboard.dto.SaveMessageDTO;
+import se.storytel.messageboard.dto.UserDTO;
 import se.storytel.messageboard.mapper.MessageMapper;
 import se.storytel.messageboard.service.ClientService;
 import se.storytel.messageboard.service.MessageService;
@@ -31,7 +33,8 @@ import se.storytel.messageboard.service.MessageService;
  * @author Sandor Nemeth
  */
 @RestController
-@RequestMapping(value = "/api/messages", produces = MediaType.APPLICATION_JSON_VALUE)
+@CrossOrigin
+@RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MessageController
 {
     private final MessageService messageService;
@@ -44,12 +47,17 @@ public class MessageController
         this.clientService = clientService;
     }
 
+    @PostMapping ("/login")
+    public boolean login(@RequestBody UserDTO user)
+    {
+        return clientService.validAuthentication(user.getUsername(), user.getPassword());
+    }
     /**
      * Find all messages independently of client
      *
      * @return {@link MessageListWrapper} class contains the list of all messages
      */
-    @GetMapping
+    @GetMapping("/messages")
     public ResponseEntity<MessageListWrapper> findAllMessages()
     {
         return ResponseEntity.ok(
@@ -66,7 +74,7 @@ public class MessageController
      *
      * @return {@link MessageListWrapper} class contains the list of messages
      */
-    @GetMapping("/client")
+    @GetMapping("messages/client")
     public ResponseEntity<MessageListWrapper> findClientMessages(Principal principal)
     {
         return ResponseEntity.ok(
@@ -84,7 +92,7 @@ public class MessageController
      * @param message   Message to save
      * @return  Saved message with status
      */
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> createMessage(@RequestBody SaveMessageDTO message, Principal principal)
     {
         if (message.getId() != null)
@@ -106,7 +114,7 @@ public class MessageController
      * @param dto    Message
      * @return Saved message with status
      */
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value="/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MessageDTO> updateMessage(@RequestBody SaveMessageDTO dto, Principal principal)
     {
         dto.setClientId(getClientId(principal));
@@ -124,7 +132,7 @@ public class MessageController
      * @param id        id of message
      * @return Empty response with status
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/messages/{id}")
     public ResponseEntity<Object> deleteMessage(@PathVariable long id, Principal principal)
     {
         messageService.deleteMessageByIdAndClientId(id, getClientId(principal));

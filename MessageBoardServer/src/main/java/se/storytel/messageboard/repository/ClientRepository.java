@@ -16,4 +16,6 @@ import se.storytel.messageboard.entity.Client;
 public interface ClientRepository extends JpaRepository<Client, Long>
 {
     Optional<Client> findByUsername(String username);
+
+    Client findByUsernameAndPassword(String username,String password);
 }

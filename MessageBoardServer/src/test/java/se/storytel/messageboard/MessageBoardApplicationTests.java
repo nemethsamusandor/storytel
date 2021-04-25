@@ -2,8 +2,10 @@ package se.storytel.messageboard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -28,6 +30,7 @@ import se.storytel.messageboard.dto.ErrorResponseWrapper;
 import se.storytel.messageboard.dto.MessageDTO;
 import se.storytel.messageboard.dto.MessageListWrapper;
 import se.storytel.messageboard.dto.SaveMessageDTO;
+import se.storytel.messageboard.dto.UserDTO;
 
 /**
  * Integration test of the application
@@ -43,6 +46,7 @@ import se.storytel.messageboard.dto.SaveMessageDTO;
 class MessageBoardApplicationTests
 {
     private static final String HEALTH_PATH = "/api/health";
+    private static final String LOGIN_PATH = "/api/login";
     private static final String MESSAGES_BASE_PATH = "/api/messages";
     private static final String CLIENT_MESSAGES_PATH = MESSAGES_BASE_PATH + "/client";
     private static final String DELETE_PATH = MESSAGES_BASE_PATH + "/%s";
@@ -250,6 +254,50 @@ class MessageBoardApplicationTests
 
         ErrorResponseWrapper savedMessage = responseEntity.getBody();
         assertEquals("Message id must not be set for adding new message", savedMessage.getMessage());
+    }
+
+    /**
+     * Test Login
+     */
+    @Test
+    void loginTest()
+    {
+        UserDTO user = new UserDTO();
+
+        user.setUsername(CLIENT_2);
+        user.setPassword("$2y$12$k18H5KwcvFfm47UEEpq9P.8mJcT5HFFl.Ie5dNnVNJBARor3CaDZC");
+
+        HttpEntity<UserDTO> request = new HttpEntity<>(user, getHeaders(CLIENT_2));
+
+        ResponseEntity<Boolean> responseEntity =
+            restTemplate.postForEntity(LOGIN_PATH, request, Boolean.class);
+
+        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+
+        assertTrue(responseEntity.getBody());
+    }
+
+    /**
+     * Test failing Login
+     */
+    @Test
+    void loginFailedTest()
+    {
+        UserDTO user = new UserDTO();
+
+        user.setUsername(CLIENT_2);
+        user.setPassword("");
+
+        HttpEntity<UserDTO> request = new HttpEntity<>(user, getHeaders(CLIENT_2));
+
+        ResponseEntity<Boolean> responseEntity =
+            restTemplate.postForEntity(LOGIN_PATH, request, Boolean.class);
+
+        assertSame(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+
+        assertFalse(responseEntity.getBody());
     }
 
     /**

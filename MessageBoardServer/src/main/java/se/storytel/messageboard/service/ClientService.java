@@ -15,7 +15,7 @@ import se.storytel.messageboard.repository.ClientRepository;
 @Service
 public class ClientService
 {
-    private ClientRepository repository;
+    private final ClientRepository repository;
 
     @Autowired
     public ClientService(ClientRepository repository)
@@ -29,5 +29,17 @@ public class ClientService
             .orElseThrow(ClientNotFoundException::new);
 
         return client.getId();
+    }
+
+    /**
+     * Check if Client credentials are valid for authentication
+     *
+     * @param username  username
+     * @param password  password
+     * @return authenticated
+     */
+    public boolean validAuthentication(String username, String password)
+    {
+        return repository.findByUsernameAndPassword(username, password) != null;
     }
 }

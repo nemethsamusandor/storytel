@@ -50,7 +50,7 @@ Lili    | password
 
 Service uses Basic authentication
 
-###Insert new client to database 
+**Insert new client to database** 
 ````
 insert into client (username, password) values ('New client', 'bcrypt encoded password');
 
@@ -82,3 +82,9 @@ Encrypted password can be generetad online e.g. on this site: ``https://bcrypt-g
 
 ## Service test
 Service can be tested with e.g. Postman, Terminal (curl) or other tools
+
+Configure request header map with
+```
+Content-Type: application/json
+Authorization: Basic <Base64 encoded credentials of username:password>
+```

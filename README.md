@@ -70,6 +70,7 @@ Encrypted password can be generetad online e.g. on this site: ``https://bcrypt-g
 ## Available endpoints
 
 * ```POST http://localhost:8329/api/login``` - Authenticate client
+  
   ``Request body:
   {
   "username" : "string",

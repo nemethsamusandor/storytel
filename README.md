@@ -43,10 +43,10 @@ Initiated clients (what can be extended in H2 in memory database):
 
 Username|Password
 --------|---------
-Emily   | password
-John    | password
-Sandor  | password
-Lili    | password
+Emily   | password `<encrypted>`
+John    | password `<encrypted>`
+Sandor  | password `<encrypted>`
+Lili    | password `<encrypted>`
 
 Service uses Basic authentication
 

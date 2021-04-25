@@ -27,8 +27,17 @@ or
 * Run Docker build ```docker build -t se.storytel.messageboard:0.0.1 .``` to create docker image
 * Run Docker image ```docker run --publish 8239:8080 --detach --name storytel.messageboard se.storytel.messageboard:0.0.1```
 
+## Start server from console
+Navigate to compiled jar location (by default is `<project location>\MessageBoardServer\target>`) 
+and start server with `java -jar messageboard-0.0.1.jar`
+
+RestAPI endpoints are listening by default on port 8329, 
+but this can be change modifying the port in 
+
+`application.properties -> server.port=8329`
+
 ## Database connection
-Database is accessible on localhost:8329/h2-console
+Database is accessible on http://localhost:8329/h2-console
 ````
 Driver class:   org.h2.Driver
 JDBC URL:       jdbc:h2:mem:storytel
@@ -37,7 +46,6 @@ Password:       <leave it empty>
 ````
 
 ## Initialization
-RestAPI endpoint is accessible by default on port 8329.
 Clients need to login in order to access services methods.
 Initiated clients (what can be extended in H2 in memory database):
 

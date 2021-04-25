@@ -61,16 +61,23 @@ Encrypted password can be generetad online e.g. on this site: ``https://bcrypt-g
 
 ## Available endpoints
 
-* ```GET http://localhost:8329/messages``` - Get all messages in the service 
-* ```GET http://localhost:8329/messages/client``` - Get all messages of the authenticated client
-* ```POST http://localhost:8329/messages``` - Add a client message
+* ```POST http://localhost:8329/api/login``` - Authenticate client
+  ``Request body:
+  {
+  "username" : "string",
+  "password": "bcrypt encoded password"
+  }
+  ``
+* ```GET http://localhost:8329/api/messages``` - Get all messages in the service 
+* ```GET http://localhost:8329/api/messages/client``` - Get all messages of the authenticated client
+* ```POST http://localhost:8329/api/messages``` - Add a client message
   
   ``Request body: 
     {
     "text": "string"
     }
   ``
-* ```PUT http://localhost:8329/messages``` - Update a client message
+* ```PUT http://localhost:8329/api/messages``` - Update a client message
 
   ``Request body:
   {
@@ -78,7 +85,7 @@ Encrypted password can be generetad online e.g. on this site: ``https://bcrypt-g
   "text": "string"
   }
   ``
-* ```DELETE http://localhost:8329/messages/{id}``` - Delete a client message
+* ```DELETE http://localhost:8329/api/messages/{id}``` - Delete a client message
 
 ## Service test
 Service can be tested with e.g. Postman, Terminal (curl) or other tools
